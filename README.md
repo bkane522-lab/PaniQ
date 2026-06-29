@@ -76,3 +76,9 @@ Cette version évite les dépendances `latest`, qui peuvent casser un build Verc
 - PWA configurée manuellement avec `manifest.webmanifest` et `sw.js`.
 - Suppression de `vite-plugin-pwa` pour éviter les conflits de version au build.
 - Node forcé en 20.x via `package.json`.
+
+
+## Vercel
+
+Cette version force Node.js 24.x et corrige le build Vite.
+

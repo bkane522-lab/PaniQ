@@ -1,7 +1,7 @@
 {
   "name": "paniq",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -9,13 +9,15 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "4.3.4",
-    "vite": "5.4.11",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vite": "5.4.11",
+    "@vitejs/plugin-react": "4.3.4"
+  },
   "engines": {
-    "node": "20.x"
-  }
+    "node": "24.x"
+  },
+  "packageManager": "npm@11.0.0"
 }
