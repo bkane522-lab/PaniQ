@@ -1,28 +1,34 @@
 # PaniQ
 
-**PaniQ** est une PWA React/Vite pour comparer une liste de courses entre plusieurs enseignes et repérer des économies possibles.
+PaniQ est une PWA de comparaison indicative de panier de courses.
 
-L'app affiche des **estimations indicatives**. Elle ne garantit pas des prix exacts, car les prix réels peuvent varier selon le magasin, le drive, la ville, la marque disponible et les promotions.
+## Promesse
+
+- Comparer un panier entre Leclerc, Lidl, Carrefour et Intermarché.
+- Proposer des substitutions simples pour réduire le total estimé.
+- Rester transparent : les montants affichés sont des estimations indicatives, pas des prix exacts garantis.
 
 ## Structure
 
 ```txt
 paniq-project/
 ├── api/
-│   └── analyze.js          ← route serveur Vercel pour sécuriser l'appel IA
+│   └── analyze.js
 ├── public/
 │   ├── favicon.svg
 │   ├── icon-192.png
 │   ├── icon-512.png
-│   └── maskable-512.png
+│   ├── manifest.webmanifest
+│   ├── maskable-512.png
+│   └── sw.js
 ├── src/
-│   ├── App.jsx             ← app complète PaniQ
+│   ├── App.jsx
 │   └── main.jsx
 ├── index.html
 ├── package.json
-├── vite.config.js          ← PWA configurée
-├── vercel.json             ← routing SPA + API
-├── .env.example            ← clé API à renseigner
+├── vite.config.js
+├── vercel.json
+├── .env.example
 ├── .gitignore
 └── README.md
 ```
@@ -34,44 +40,39 @@ npm install
 npm run dev
 ```
 
-## Déploiement Vercel
-
-1. Importer le projet sur GitHub.
-2. Connecter le repo à Vercel.
-3. Dans Vercel, ajouter la variable d'environnement :
+## Build
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+npm run build
 ```
 
-Optionnel :
+## Déploiement Vercel
 
-```bash
+1. Importer le dossier sur GitHub.
+2. Importer le dépôt dans Vercel.
+3. Laisser Vercel détecter Vite.
+4. Build command : `npm run build`.
+5. Output directory : `dist`.
+
+## IA / clé API
+
+La clé Anthropic ne doit jamais être placée dans `src/App.jsx`.
+
+Dans Vercel, ajouter seulement si tu veux activer l'analyse IA externe :
+
+```txt
+ANTHROPIC_API_KEY=ta_clé_api
 ANTHROPIC_MODEL=claude-sonnet-4-6
 ```
 
-4. Déployer.
+Sans clé API, l'application fonctionne quand même avec le moteur local d'estimation inclus dans `api/analyze.js`.
 
-## Sécurité
+## Correction V1.0.1
 
-La clé API n'est pas dans `src/App.jsx`. L'app appelle :
+Cette version évite les dépendances `latest`, qui peuvent casser un build Vercel quand une nouvelle version majeure de Vite ou d'un plugin sort.
 
-```txt
-/api/analyze
-```
-
-Puis la route serveur appelle Anthropic côté Vercel. Cela évite d'exposer la clé API dans le navigateur.
-
-## Mode sans clé API
-
-Si `ANTHROPIC_API_KEY` n'est pas renseignée, l'app utilise un mode d'estimation local côté serveur. Cela permet de tester l'interface sans bloquer l'expérience.
-
-## Promesse utilisateur
-
-PaniQ aide à :
-
-- comparer un panier de courses ;
-- repérer les produits qui pèsent lourd dans le budget ;
-- proposer des substitutions raisonnables ;
-- rappeler que les prix doivent être vérifiés en magasin ou en drive.
-
+- Vite épinglé en version stable.
+- React épinglé en version stable.
+- PWA configurée manuellement avec `manifest.webmanifest` et `sw.js`.
+- Suppression de `vite-plugin-pwa` pour éviter les conflits de version au build.
+- Node forcé en 20.x via `package.json`.
