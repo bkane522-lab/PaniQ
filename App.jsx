@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+const STORES = ["Leclerc", "Lidl", "Aldi", "Carrefour", "Intermarché"];
+
 const PALETTE = {
   cream: "#FAFAF7",
   green: "#173F2B",
@@ -276,12 +278,35 @@ const STYLES = `
   }
   .ai-analysis-label { font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #6D7BD0; margin-bottom: 6px; text-transform: uppercase; }
 
+  .source-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: ${PALETTE.greenLight};
+    color: ${PALETTE.green};
+    border: 1px solid #C3E6D0;
+    border-radius: 999px;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .2px;
+  }
+
   .items-section { margin-bottom: 18px; }
   .items-title { font-size: 13px; font-weight: 800; color: ${PALETTE.gray}; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-  .item-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid #F3F4F6; font-size: 14px; }
+  .item-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 14px;
+  }
   .item-row:last-child { border-bottom: none; }
-  .item-name { color: ${PALETTE.dark}; flex: 1; min-width: 0; }
-  .item-swap { font-size: 12px; color: ${PALETTE.greenMid}; font-weight: 700; background: ${PALETTE.greenLight}; padding: 4px 8px; border-radius: 9px; max-width: 175px; text-align: right; }
+  .item-name { color: ${PALETTE.dark}; min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }
+  .item-swap { font-size: 12px; color: ${PALETTE.greenMid}; font-weight: 700; background: ${PALETTE.greenLight}; padding: 4px 8px; border-radius: 9px; max-width: 220px; text-align: left; line-height: 1.25; }
   .item-saving { font-size: 12px; font-weight: 800; color: ${PALETTE.green}; white-space: nowrap; }
   .item-ok { font-size: 12px; color: ${PALETTE.gray}; white-space: nowrap; }
 
@@ -306,8 +331,9 @@ const STYLES = `
     .input-footer { align-items: stretch; flex-direction: column; }
     .btn-analyze { width: 100%; }
     .comparison-grid { grid-template-columns: 1fr; }
-    .item-row { align-items: flex-start; flex-wrap: wrap; }
-    .item-swap { max-width: 100%; text-align: left; }
+    .item-row { grid-template-columns: 1fr; gap: 6px; align-items: start; }
+    .item-swap { max-width: 100%; text-align: left; justify-self: start; }
+    .item-saving, .item-ok { justify-self: start; }
   }
 `;
 
@@ -366,6 +392,7 @@ function fallbackAnalyze(input) {
   const stores = [
     { name: "Leclerc", multiplier: 0.96 },
     { name: "Lidl", multiplier: 0.91 },
+    { name: "Aldi", multiplier: 0.90 },
     { name: "Carrefour", multiplier: 1.05 },
     { name: "Intermarché", multiplier: 1.0 }
   ].map((store) => ({ name: store.name, price: Number((baseTotal * store.multiplier).toFixed(2)) }));
@@ -375,7 +402,7 @@ function fallbackAnalyze(input) {
     ...store,
     diff: Number((store.price - minPrice).toFixed(2))
   }));
-  const bestStore = storesWithDiff.find((store) => store.price === minPrice)?.name || "Lidl";
+  const bestStore = storesWithDiff.find((store) => store.price === minPrice)?.name || "Aldi";
 
   const analyzedItems = items.map((item) => ({ name: item, ...swapForItem(item) }));
   const savingsCents = analyzedItems.reduce((sum, item) => sum + (item.saving || 0), 0);
@@ -391,8 +418,53 @@ function fallbackAnalyze(input) {
     best_store: bestStore,
     stores: storesWithDiff,
     items: analyzedItems,
-    tip: "Compare surtout les marques distributeur et les formats familiaux : les plus grosses économies viennent souvent des couches, de la lessive, des viandes et des produits de marque.",
+    tip: "Compare surtout Aldi, Lidl et les marques distributeur : les plus grosses économies viennent souvent des couches, de la lessive, des viandes et des produits de marque.",
     analysis: "Cette analyse est une estimation indicative. Les prix réels peuvent varier selon la ville, le drive, le magasin et les promotions en cours."
+  };
+}
+
+function completeStores(result, input) {
+  const fallback = fallbackAnalyze(input);
+  const provided = Array.isArray(result?.stores) ? result.stores : [];
+  const byName = new Map(
+    provided.map((store) => [String(store?.name || "").toLowerCase(), store])
+  );
+
+  const stores = STORES.map((name) => {
+    const found = byName.get(name.toLowerCase());
+    const fallbackStore = fallback.stores.find((store) => store.name === name);
+    return {
+      name,
+      price: Number(found?.price ?? fallbackStore?.price ?? 0),
+      diff: 0
+    };
+  });
+
+  const minPrice = Math.min(...stores.map((store) => store.price));
+  return stores.map((store) => ({
+    ...store,
+    diff: Number((store.price - minPrice).toFixed(2))
+  }));
+}
+
+function normalizeClientResult(data, input) {
+  const fallback = fallbackAnalyze(input);
+  const stores = completeStores(data?.stores ? data : fallback, input);
+  const bestStore = stores.find((store) => store.diff === 0)?.name || fallback.best_store;
+
+  return {
+    ...fallback,
+    ...data,
+    savings: Number.isFinite(Number(data?.savings)) ? Number(data.savings) : fallback.savings,
+    original_total: Number.isFinite(Number(data?.original_total)) ? Number(data.original_total) : fallback.original_total,
+    optimized_total: Number.isFinite(Number(data?.optimized_total)) ? Number(data.optimized_total) : fallback.optimized_total,
+    best_store: bestStore,
+    stores,
+    items: Array.isArray(data?.items) && data.items.length ? data.items : fallback.items,
+    verdict: data?.verdict || `${bestStore} semble le plus intéressant pour ce panier, selon une estimation indicative.`,
+    tip: data?.tip || fallback.tip,
+    analysis: data?.analysis || fallback.analysis,
+    source: data?.source || "local"
   };
 }
 
@@ -435,9 +507,13 @@ export default function App() {
 
       if (!response.ok) throw new Error("API indisponible");
       const data = await response.json();
-      setResult(data);
+      const normalized = normalizeClientResult(data, input);
+      setResult(normalized);
+      if (normalized?.source === "local") {
+        setError("Mode estimation locale : ajoute la clé API Groq dans Vercel pour activer l’analyse IA.");
+      }
     } catch {
-      setResult(fallbackAnalyze(input));
+      setResult(normalizeClientResult(fallbackAnalyze(input), input));
       setError("Mode estimation locale activé : l'app fonctionne, mais la clé IA serveur n'est pas encore configurée.");
     } finally {
       setLoading(false);
@@ -505,7 +581,7 @@ export default function App() {
             <div className="loading-card">
               <div className="loading-basket">🛒</div>
               <div className="loading-text">Comparaison en cours...</div>
-              <div className="loading-sub">Leclerc · Lidl · Carrefour · Intermarché</div>
+              <div className="loading-sub">Leclerc · Lidl · Aldi · Carrefour · Intermarché</div>
               <div className="progress-bar"><div className="progress-fill" /></div>
             </div>
           )}
@@ -530,6 +606,7 @@ export default function App() {
               </div>
 
               <div className="result-body">
+                <div className="source-chip">{result.source === "groq" ? "🤖 Analyse Groq serveur" : result.source === "ia" ? "🤖 Analyse IA serveur" : "⚡ Estimation locale"}</div>
                 <div className="section-label">Prix par enseigne</div>
                 <div className="comparison-grid">
                   {sortedStores.map((store, index) => (

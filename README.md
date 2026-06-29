@@ -1,63 +1,61 @@
 # PaniQ
 
-PaniQ est une app Vite + React pour estimer un panier de courses, comparer plusieurs enseignes et repérer des économies possibles.
+PaniQ compare une liste de courses et repère les économies possibles avec des estimations indicatives.
 
-## Important
+## Nouveautés V1.0.7
 
-Les prix affichés sont des estimations indicatives. Ils peuvent varier selon le magasin, le drive, la ville et les promotions.
-
-## Version V1.0.4 Mobile Safe
-
-Cette version est pensée pour éviter l'erreur Vercel :
-
-```txt
-Could not resolve "./src/main.jsx" from "index.html"
-```
-
-Le fichier d'entrée est maintenant à la racine :
-
-```txt
-main.jsx
-App.jsx
-```
-
-Donc même si GitHub n'importe pas les dossiers `src/`, le build Vercel peut fonctionner.
+- API serveur `/api/analyze` connectée à **Groq**.
+- Variable Vercel : `GROQ_API_KEY`.
+- Modèle par défaut : `llama-3.3-70b-versatile`.
+- Aldi conservé dans la comparaison.
+- Comparaison sur 5 enseignes : Leclerc, Lidl, Aldi, Carrefour, Intermarché.
+- Moteur local de secours si la clé API n'est pas configurée ou si l'API répond avec une erreur.
+- Version mobile-safe : `App.jsx` et `main.jsx` sont à la racine, pour éviter les erreurs d'upload GitHub mobile.
 
 ## Structure
 
 ```txt
-paniq/
-├── App.jsx
-├── main.jsx
-├── index.html
-├── package.json
-├── vite.config.js
-├── vercel.json
+PaniQ/
 ├── api/
 │   └── analyze.js
 ├── public/
 │   ├── favicon.svg
 │   ├── manifest.webmanifest
 │   └── sw.js
+├── App.jsx
+├── main.jsx
+├── index.html
+├── package.json
+├── vite.config.js
+├── vercel.json
 ├── .env.example
 ├── .gitignore
+├── .nvmrc
 ├── .node-version
-└── .nvmrc
+└── README.md
 ```
 
 ## Déploiement Vercel
 
-- Framework Preset : Vite
-- Build Command : `npm run build`
-- Output Directory : `dist`
-- Node : 24.x
+1. Mets tous les fichiers du ZIP à la racine du dépôt GitHub.
+2. Vérifie que tu vois bien `App.jsx`, `main.jsx`, `api/`, `public/` à la racine.
+3. Déploie sur Vercel avec le preset Vite.
+4. Pour activer l'IA Groq, ajoute une variable d'environnement dans Vercel :
 
-## IA
+```txt
+GROQ_API_KEY=ta_clé_groq
+```
 
-L'app fonctionne sans clé IA grâce au moteur local.
+Optionnel :
 
-Pour activer Claude côté serveur :
+```txt
+GROQ_MODEL=llama-3.3-70b-versatile
+```
 
-1. Aller dans Vercel > Project Settings > Environment Variables
-2. Ajouter : `ANTHROPIC_API_KEY`
-3. Redéployer
+Après l'ajout de la clé, relance un **Redeploy** dans Vercel.
+
+## Important
+
+Ne mets jamais ta clé API dans GitHub. Elle doit rester uniquement dans Vercel > Settings > Environment Variables.
+
+PaniQ ne donne pas des prix exacts garantis. Les résultats sont des estimations indicatives et peuvent varier selon le magasin, le drive, la ville, les formats, les stocks et les promotions.
