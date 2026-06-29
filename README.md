@@ -82,3 +82,25 @@ Cette version évite les dépendances `latest`, qui peuvent casser un build Verc
 
 Cette version force Node.js 24.x et corrige le build Vite.
 
+
+
+## Correctif Vercel V1.0.3
+
+Cette version corrige l’import de `src/main.jsx` depuis `index.html` en utilisant un chemin relatif : `./src/main.jsx`.
+
+Important pour GitHub : le dossier `src/` doit être présent à la racine du dépôt, au même niveau que `index.html` et `package.json`.
+
+Structure attendue dans GitHub :
+
+```txt
+PaniQ/
+├── api/
+├── public/
+├── src/
+│   ├── App.jsx
+│   └── main.jsx
+├── index.html
+├── package.json
+├── vite.config.js
+└── vercel.json
+```

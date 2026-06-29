@@ -1,7 +1,7 @@
 {
   "name": "paniq",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -19,5 +19,5 @@
   "engines": {
     "node": "24.x"
   },
-  "packageManager": "npm@11.0.0"
+  "packageManager": "npm@11.6.2"
 }
